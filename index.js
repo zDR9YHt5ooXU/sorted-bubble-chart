@@ -99,7 +99,7 @@ const yAxis = (g) =>
     .call((g) =>
       g
         .selectAll('g')
-        .data(y.ticks().reverse())
+        .data(y.ticks(2).reverse())
         .join('g')
         .attr('fill', 'none')
         .call((g) =>
@@ -144,30 +144,30 @@ function radialAreaChart() {
     .attr('stroke-linejoin', 'round')
     .attr('stroke-linecap', 'round');
 
-  svg
-    .append('path')
-    .attr('fill', 'lightsteelblue')
-    .attr('fill-opacity', 0.2)
-    .attr(
-      'd',
-      area.innerRadius((d) => y(d.minmin)).outerRadius((d) => y(d.maxmax))(data)
-    );
+  // svg
+  //   .append('path')
+  //   .attr('fill', 'lightsteelblue')
+  //   .attr('fill-opacity', 0.2)
+  //   .attr(
+  //     'd',
+  //     area.innerRadius((d) => y(d.minmin)).outerRadius((d) => y(d.maxmax))(data)
+  //   );
 
-  svg
-    .append('path')
-    .attr('fill', 'steelblue')
-    .attr('fill-opacity', 0.2)
-    .attr(
-      'd',
-      area.innerRadius((d) => y(d.min)).outerRadius((d) => y(d.max))(data)
-    );
+  // svg
+  //   .append('path')
+  //   .attr('fill', 'steelblue')
+  //   .attr('fill-opacity', 0.2)
+  //   .attr(
+  //     'd',
+  //     area.innerRadius((d) => y(d.min)).outerRadius((d) => y(d.max))(data)
+  //   );
 
   svg
     .append('path')
     .attr('fill', 'none')
     .attr('stroke', 'steelblue')
-    .attr('stroke-width', 1.5)
-    .attr('d', line.radius((d) => y(d.avg))(data));
+    .attr('stroke-width', 1.5);
+  // .attr('d', line.radius((d) => y(d.avg))(data));
 
   svg.append('g').call(xAxis);
 
