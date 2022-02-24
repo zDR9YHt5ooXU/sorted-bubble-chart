@@ -49,7 +49,7 @@ const yAxis = (g) =>
     .call((g) =>
       g
         .selectAll('g')
-        .data(y.ticks(2).reverse())
+        .data(yTicks.reverse())
         .join('g')
         .attr('fill', 'none')
         .call((g) =>
@@ -81,6 +81,29 @@ const y = d3
   .scaleLinear()
   .domain([d3.min(data, (d) => d.minmin), d3.max(data, (d) => d.maxmax)])
   .range([innerRadius, outerRadius]);
+const files = [
+  { id: 'flare.analytics.graph.MaxFlowMinCut', value: 7840 },
+  { id: 'flare.analytics.graph.ShortestPaths', value: 5914 },
+  { id: 'flare.analytics.graph.SpanningTree', value: 3416 },
+];
+
+const yTicks = y.ticks(2);
+const yTickValues = yTicks.map(y);
+const circleRadius = -(yTickValues[0] - yTickValues[1]) / 2;
+const firstRingMid = (yTickValues[0] + yTickValues[1]) / 2;
+const circleRadiusScale = d3
+  .scaleLinear()
+  .domain([d3.min(files, (d) => d.value), d3.max(files, (d) => d.value)])
+  .range([10, circleRadius]);
+console.log(
+  '!!!!!!!!!files',
+  files.map((d) => circleRadiusScale(d.value))
+);
+console.log('yTicks', yTicks);
+console.log('yTicks value', yTicks.map(y));
+console.log('innerRadius', innerRadius);
+console.log('outerRadius', outerRadius);
+console.log('circleRadius', circleRadius);
 
 function radialAreaChart() {
   const svg = d3
@@ -120,7 +143,32 @@ function radialAreaChart() {
   // return svg.node();
   return svg;
 }
-
+function addCircles(svg) {
+  const colors = d3.schemeTableau10;
+  const x = d3
+    .scaleUtc()
+    .domain([Date.UTC(2000, 0, 1), Date.UTC(2001, 0, 1) - 1])
+    .range([0, 2 * Math.PI]);
+  const ticks = x.ticks(3);
+  console.log('!!!!!!ticks', ticks);
+  svg
+    .selectAll('g.sorted')
+    .data(files)
+    .join('g')
+    .attr(
+      'transform',
+      (d) => `translate(${d.x - width / 2},${d.y - height / 2})`
+    )
+    .attr('class', 'sorted')
+    .append('circle')
+    .attr('stroke', '2px')
+    .attr('cx', (d, i) => {
+      console.log(d.angle);
+      return d3.pointRadial(d.angle, firstRingMid)[0];
+    })
+    .attr('cy', (d, i) => d3.pointRadial(d.angle, firstRingMid)[1])
+    .attr('r', (d) => circleRadiusScale(d.value));
+}
 function BubbleChart(
   svg,
   data,
@@ -239,32 +287,38 @@ function BubbleChart(
 
   return Object.assign(svg.node(), { scales: { color } });
 }
-const files = [
-  { id: 'flare.analytics.graph.MaxFlowMinCut', value: 7840 },
-  { id: 'flare.analytics.graph.ShortestPaths', value: 5914 },
-  { id: 'flare.analytics.graph.SpanningTree', value: 3416 },
-];
 
+const angleRange = d3
+  .scaleLinear()
+  .domain([0, d3.sum(files, (d) => d.value)])
+  .range([0, 2 * Math.PI]);
+files.reduce((acc, d) => {
+  const angle = angleRange(d.value);
+  console.log(`angle is ${angle}`);
+  d.angle = acc + angle;
+  return d.angle;
+}, 0);
 const svg = radialAreaChart();
-const bubleChart = BubbleChart(svg, files, {
-  label: (d) =>
-    [
-      ...d.id
-        .split('.')
-        .pop()
-        .split(/(?=[A-Z][a-z])/g),
-      d.value.toLocaleString('en'),
-    ].join('\n'),
-  value: (d) => d.value,
-  group: (d) => d.id.split('.')[1],
-  title: (d) => `${d.id}\n${d.value.toLocaleString('en')}`,
-  link: (d) =>
-    `https://github.com/prefuse/Flare/blob/master/flare/src/${d.id.replace(
-      /\./g,
-      '/'
-    )}.as`,
-  width,
-});
+addCircles(svg, files);
+// const bubleChart = BubbleChart(svg, files, {
+//   label: (d) =>
+//     [
+//       ...d.id
+//         .split('.')
+//         .pop()
+//         .split(/(?=[A-Z][a-z])/g),
+//       d.value.toLocaleString('en'),
+//     ].join('\n'),
+//   value: (d) => d.value,
+//   group: (d) => d.id.split('.')[1],
+//   title: (d) => `${d.id}\n${d.value.toLocaleString('en')}`,
+//   link: (d) =>
+//     `https://github.com/prefuse/Flare/blob/master/flare/src/${d.id.replace(
+//       /\./g,
+//       '/'
+//     )}.as`,
+//   width,
+// });
 
 const element = document.querySelector('div#chart');
 element.appendChild(svg.node());
