@@ -81,11 +81,19 @@ const y = d3
   .scaleLinear()
   .domain([d3.min(data, (d) => d.minmin), d3.max(data, (d) => d.maxmax)])
   .range([innerRadius, outerRadius]);
-const files = [
-  { id: 'flare.analytics.graph.MaxFlowMinCut', value: 7840 },
-  { id: 'flare.analytics.graph.ShortestPaths', value: 5914 },
-  { id: 'flare.analytics.graph.SpanningTree', value: 3416 },
-];
+
+const random = d3.randomNormal(0.4, 0.3);
+const files = d3.range(10).map((id) => {
+  return {
+    id,
+    value: random(),
+  };
+});
+// const files = [
+//   { id: 'flare.analytics.graph.MaxFlowMinCut', value: 7840 },
+//   { id: 'flare.analytics.graph.ShortestPaths', value: 5914 },
+//   { id: 'flare.analytics.graph.SpanningTree', value: 3416 },
+// ];
 
 const yTicks = y.ticks(2);
 const yTickValues = yTicks.map(y);
@@ -179,7 +187,6 @@ function radialAreaChart() {
   return svg;
 }
 function addCircles(svg) {
-  const colors = d3.schemeTableau10;
   const x = d3
     .scaleUtc()
     .domain([Date.UTC(2000, 0, 1), Date.UTC(2001, 0, 1) - 1])
