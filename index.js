@@ -91,14 +91,30 @@ const yTicks = y.ticks(2);
 const yTickValues = yTicks.map(y);
 const circleRadius = -(yTickValues[0] - yTickValues[1]) / 2;
 const firstRingMid = (yTickValues[0] + yTickValues[1]) / 2;
+console.log('firstRingMid', firstRingMid);
+console.log('circleRadius', circleRadius);
+const minRadius = 10;
 const circleRadiusScale = d3
   .scaleLinear()
   .domain([d3.min(files, (d) => d.value), d3.max(files, (d) => d.value)])
-  .range([10, circleRadius]);
+  .range([minRadius, circleRadius]);
 console.log(
   '!!!!!!!!!files',
   files.map((d) => circleRadiusScale(d.value))
 );
+
+files.forEach((f) => {
+  f.r = circleRadiusScale(f.value);
+  f.angle = getArcCircleAngle(firstRingMid, f.r);
+  console.log('angle is', f.angle);
+});
+
+function getArcCircleAngle(mainRadius, innerCircleRadius) {
+  const distanceToCutline =
+    mainRadius - Math.pow(innerCircleRadius, 2) / (2 * mainRadius);
+  return 2 * Math.acos(distanceToCutline / mainRadius);
+}
+
 console.log('yTicks', yTicks);
 console.log('yTicks value', yTicks.map(y));
 console.log('innerRadius', innerRadius);
@@ -169,6 +185,7 @@ function addCircles(svg) {
     .attr('cy', (d, i) => d3.pointRadial(d.angle, firstRingMid)[1])
     .attr('r', (d) => circleRadiusScale(d.value));
 }
+
 function BubbleChart(
   svg,
   data,
@@ -288,16 +305,13 @@ function BubbleChart(
   return Object.assign(svg.node(), { scales: { color } });
 }
 
+const sum = d3.sum(files, (d) => d.value);
+console.log(files.map((f) => f.value));
+console.log(`sum ${sum}`);
 const angleRange = d3
   .scaleLinear()
-  .domain([0, d3.sum(files, (d) => d.value)])
+  .domain([0, sum])
   .range([0, 2 * Math.PI]);
-files.reduce((acc, d) => {
-  const angle = angleRange(d.value);
-  console.log(`angle is ${angle}`);
-  d.angle = acc + angle;
-  return d.angle;
-}, 0);
 const svg = radialAreaChart();
 addCircles(svg, files);
 // const bubleChart = BubbleChart(svg, files, {
