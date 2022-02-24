@@ -103,16 +103,35 @@ console.log(
   files.map((d) => circleRadiusScale(d.value))
 );
 
+const color = d3.scaleOrdinal(d3.schemeTableau10);
+
 files.forEach((f) => {
   f.r = circleRadiusScale(f.value);
+  console.log('radius is ', f.r);
+  // f.angle = 2 * Math.PI;
   f.angle = getArcCircleAngle(firstRingMid, f.r);
   console.log('angle is', f.angle);
 });
-
+const spaceBetweenCircles =
+  (2 * Math.PI - d3.sum(files, (d) => d.angle)) / files.length;
+console.log('space between circles', spaceBetweenCircles);
+files.reduce((acc, f) => {
+  const startPoint = acc + spaceBetweenCircles;
+  f.angleFinal = startPoint + f.angle / 2;
+  return startPoint + f.angle;
+}, 0);
+console.log(
+  'final angle',
+  files.map((f) => f.angleFinal)
+);
 function getArcCircleAngle(mainRadius, innerCircleRadius) {
-  const distanceToCutline =
-    mainRadius - Math.pow(innerCircleRadius, 2) / (2 * mainRadius);
-  return 2 * Math.acos(distanceToCutline / mainRadius);
+  console.log(Math.pow(innerCircleRadius, 2));
+  console.log(2 * mainRadius);
+  let distanceToCutline = Math.pow(innerCircleRadius, 2) / (2 * mainRadius);
+  console.log(distanceToCutline);
+  distanceToCutline = mainRadius - distanceToCutline;
+  console.log(distanceToCutline);
+  return Math.acos(distanceToCutline / mainRadius) * 2;
 }
 
 console.log('yTicks', yTicks);
@@ -178,11 +197,12 @@ function addCircles(svg) {
     .attr('class', 'sorted')
     .append('circle')
     .attr('stroke', '2px')
+    .attr('fill', (d) => color(d))
     .attr('cx', (d, i) => {
-      console.log(d.angle);
-      return d3.pointRadial(d.angle, firstRingMid)[0];
+      console.log(d.angleFinal);
+      return d3.pointRadial(d.angleFinal, firstRingMid)[0];
     })
-    .attr('cy', (d, i) => d3.pointRadial(d.angle, firstRingMid)[1])
+    .attr('cy', (d, i) => d3.pointRadial(d.angleFinal, firstRingMid)[1])
     .attr('r', (d) => circleRadiusScale(d.value));
 }
 
