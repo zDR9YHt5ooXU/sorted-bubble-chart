@@ -171,24 +171,27 @@ function addCircles(svg) {
     .selectAll('g.sorted')
     .data(files)
     .join('g')
+
     // .attr(
     //   'transform',
     //   (d) => `translate(${d.x - width / 2},${d.y - height / 2})`
     // )
-    .attr('transform', (d) => {
-      const [x, y] = d3.pointRadial(d.angle, firstRingMid);
-      return `translate(${x}, ${y})`;
-    })
+    // .attr('transform', (d) => {
+    //   const [x, y] = d3.pointRadial(d.angle, firstRingMid);
+    //   return `translate(${x}, ${y})`;
+    // })
     .attr('class', 'sorted');
   leaf
     .append('circle')
     .attr('stroke', '2px')
     .attr('fill', (d) => color(d))
-    // .attr('cx', (d, i) => {
-    //   console.log(d.angleFinal);
-    //   return d3.pointRadial(d.angleFinal, firstRingMid)[0];
-    // })
-    // .attr('cy', (d, i) => d3.pointRadial(d.angleFinal, firstRingMid)[1])
+    .attr('cx', (d, i) => {
+      if (!d) {
+        debugger;
+      }
+      return d3.pointRadial(d.angle, firstRingMid)[0];
+    })
+    .attr('cy', (d, i) => d3.pointRadial(d.angle, firstRingMid)[1])
     .attr('r', (d) => circleRadiusScale(d.value));
   leaf
     .append('text')
@@ -203,13 +206,11 @@ function addCircles(svg) {
       // console.log('d is ', Math.floor(d * 100));
       return Math.floor(d * 100);
     });
-  leaf
+  svg
     .append('path')
     .attr('stroke', '#000')
     .attr('stroke-opacity', 0.2)
-    .attr('d', (d) => {
-      `M${(0, 0)} L${d3.pointRadial(d.angle, innerRadius)}`;
-    });
+    .attr('d', (d) => `M0,0 L${d3.pointRadial(d.angle, innerRadius)}`);
 }
 
 const svg = radialAreaChart();
