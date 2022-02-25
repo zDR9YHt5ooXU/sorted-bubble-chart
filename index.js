@@ -230,17 +230,22 @@ function addCircles(svg) {
       // console.log('d is ', Math.floor(d * 100));
       return Math.floor(d.value * 100);
     });
+  const link = d3
+    .link(d3.curveNatural)
+    .source((d) => d3.pointRadial(d.angle, centerCircleRadius))
+    .target((d) => d3.pointRadial(d.angle, firstRingMid - d.r));
   leaf
     .append('path')
     .attr('stroke', '#000')
     // .attr('stroke-opacity', 0.2)
     .attr(
       'd',
-      (d) =>
-        `M${d3.pointRadial(d.angle, centerCircleRadius)} L${d3.pointRadial(
-          d.angle,
-          firstRingMid - d.r
-        )}`
+      // (d) =>
+      //   `M${d3.pointRadial(d.angle, centerCircleRadius)} L${d3.pointRadial(
+      //     d.angle,
+      //     firstRingMid - d.r
+      //   )}`
+      (d) => link(d)
     );
 }
 
