@@ -83,7 +83,7 @@ const y = d3
   .range([innerRadius, outerRadius]);
 
 const random = d3.randomNormal(0.4, 0.3);
-const files = d3.range(5).map((id) => {
+const files = d3.range(100).map((id) => {
   return {
     id,
     value: random(),
@@ -113,9 +113,24 @@ files.forEach((f) => {
   // f.angle = 2 * Math.PI;
   f.arcAngle = getArcCircleAngle(firstRingMid, f.r);
 });
+files.sort((a, b) => b.arcAngle - a.arcAngle);
+const firstGroup = [];
+const restGroup = [];
+const centerCircleRadius = 80;
+let firstGroupArc = 0;
+for (let file of files) {
+  if (firstGroupArc + file.arcAngle < 1.5 * Math.PI) {
+    firstGroup.push(file);
+    firstGroupArc += file.arcAngle;
+  } else {
+    restGroup.push(file);
+  }
+}
+
+d3.shuffle(firstGroup);
 const spaceBetweenCircles =
-  (2 * Math.PI - d3.sum(files, (d) => d.arcAngle)) / files.length;
-files.reduce((acc, f, i) => {
+  (2 * Math.PI - d3.sum(firstGroup, (d) => d.arcAngle)) / firstGroup.length;
+firstGroup.reduce((acc, f, i) => {
   let startPoint = 0;
   if (i === 0) {
     startPoint = 0;
@@ -180,10 +195,10 @@ function addCircles(svg) {
     .append('circle')
     .attr('stroke', '2px')
     .attr('fill', (d) => color(undefined))
-    .attr('r', 30);
+    .attr('r', centerCircleRadius);
   const leaf = svg
     .selectAll('g.sorted')
-    .data(files)
+    .data(firstGroup)
     .join('g')
 
     // .attr(
@@ -222,7 +237,7 @@ function addCircles(svg) {
     .attr(
       'd',
       (d) =>
-        `M${d3.pointRadial(d.angle, 30)} L${d3.pointRadial(
+        `M${d3.pointRadial(d.angle, centerCircleRadius)} L${d3.pointRadial(
           d.angle,
           firstRingMid - d.r
         )}`
