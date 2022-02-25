@@ -237,7 +237,7 @@ function addCircles(svg) {
   leaf
     .append('path')
     .attr('stroke', '#000')
-    // .attr('stroke-opacity', 0.2)
+    .attr('stroke-opacity', 0.2)
     .attr(
       'd',
       // (d) =>
