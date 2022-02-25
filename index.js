@@ -99,54 +99,34 @@ const yTicks = y.ticks(2);
 const yTickValues = yTicks.map(y);
 const circleRadius = -(yTickValues[0] - yTickValues[1]) / 2;
 const firstRingMid = (yTickValues[0] + yTickValues[1]) / 2;
-console.log('firstRingMid', firstRingMid);
-console.log('circleRadius', circleRadius);
 const minRadius = 10;
 const circleRadiusScale = d3
   .scaleLinear()
   .domain([d3.min(files, (d) => d.value), d3.max(files, (d) => d.value)])
   .range([minRadius, circleRadius]);
-console.log(
-  '!!!!!!!!!files',
-  files.map((d) => circleRadiusScale(d.value))
-);
 
 const color = d3.scaleOrdinal(d3.schemeTableau10);
 
 files.forEach((f) => {
   f.r = circleRadiusScale(f.value);
-  console.log('radius is ', f.r);
+
   // f.angle = 2 * Math.PI;
-  f.angle = getArcCircleAngle(firstRingMid, f.r);
-  console.log('angle is', f.angle);
+  f.arcAngle = getArcCircleAngle(firstRingMid, f.r);
 });
 const spaceBetweenCircles =
-  (2 * Math.PI - d3.sum(files, (d) => d.angle)) / files.length;
-console.log('space between circles', spaceBetweenCircles);
+  (2 * Math.PI - d3.sum(files, (d) => d.arcAngle)) / files.length;
 files.reduce((acc, f) => {
   const startPoint = acc + spaceBetweenCircles;
-  f.angleFinal = startPoint + f.angle / 2;
-  return startPoint + f.angle;
+  f.angle = startPoint + f.arcAngle / 2;
+  return startPoint + f.arcAngle;
 }, 0);
-console.log(
-  'final angle',
-  files.map((f) => f.angleFinal)
-);
 function getArcCircleAngle(mainRadius, innerCircleRadius) {
-  console.log(Math.pow(innerCircleRadius, 2));
-  console.log(2 * mainRadius);
   let distanceToCutline = Math.pow(innerCircleRadius, 2) / (2 * mainRadius);
-  console.log(distanceToCutline);
+
   distanceToCutline = mainRadius - distanceToCutline;
-  console.log(distanceToCutline);
+
   return Math.acos(distanceToCutline / mainRadius) * 2;
 }
-
-console.log('yTicks', yTicks);
-console.log('yTicks value', yTicks.map(y));
-console.log('innerRadius', innerRadius);
-console.log('outerRadius', outerRadius);
-console.log('circleRadius', circleRadius);
 
 function radialAreaChart() {
   const svg = d3
@@ -187,39 +167,51 @@ function radialAreaChart() {
   return svg;
 }
 function addCircles(svg) {
-  const x = d3
-    .scaleUtc()
-    .domain([Date.UTC(2000, 0, 1), Date.UTC(2001, 0, 1) - 1])
-    .range([0, 2 * Math.PI]);
-  const ticks = x.ticks(3);
-  console.log('!!!!!!ticks', ticks);
-  svg
+  const leaf = svg
     .selectAll('g.sorted')
     .data(files)
     .join('g')
-    .attr(
-      'transform',
-      (d) => `translate(${d.x - width / 2},${d.y - height / 2})`
-    )
-    .attr('class', 'sorted')
+    // .attr(
+    //   'transform',
+    //   (d) => `translate(${d.x - width / 2},${d.y - height / 2})`
+    // )
+    .attr('transform', (d) => {
+      const [x, y] = d3.pointRadial(d.angle, firstRingMid);
+      return `translate(${x}, ${y})`;
+    })
+    .attr('class', 'sorted');
+  leaf
     .append('circle')
     .attr('stroke', '2px')
     .attr('fill', (d) => color(d))
-    .attr('cx', (d, i) => {
-      console.log(d.angleFinal);
-      return d3.pointRadial(d.angleFinal, firstRingMid)[0];
-    })
-    .attr('cy', (d, i) => d3.pointRadial(d.angleFinal, firstRingMid)[1])
+    // .attr('cx', (d, i) => {
+    //   console.log(d.angleFinal);
+    //   return d3.pointRadial(d.angleFinal, firstRingMid)[0];
+    // })
+    // .attr('cy', (d, i) => d3.pointRadial(d.angleFinal, firstRingMid)[1])
     .attr('r', (d) => circleRadiusScale(d.value));
+  leaf
+    .append('text')
+    .selectAll('tspan')
+    .data((d) => {
+      return [d.value];
+    })
+    .join('tspan')
+    .attr('x', 0)
+    .attr('y', 0)
+    .text((d) => {
+      // console.log('d is ', Math.floor(d * 100));
+      return Math.floor(d * 100);
+    });
+  leaf
+    .append('path')
+    .attr('stroke', '#000')
+    .attr('stroke-opacity', 0.2)
+    .attr('d', (d) => {
+      `M${(0, 0)} L${d3.pointRadial(d.angle, innerRadius)}`;
+    });
 }
 
-const sum = d3.sum(files, (d) => d.value);
-console.log(files.map((f) => f.value));
-console.log(`sum ${sum}`);
-const angleRange = d3
-  .scaleLinear()
-  .domain([0, sum])
-  .range([0, 2 * Math.PI]);
 const svg = radialAreaChart();
 addCircles(svg, files);
 
