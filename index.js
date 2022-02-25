@@ -83,7 +83,7 @@ const y = d3
   .range([innerRadius, outerRadius]);
 
 const random = d3.randomNormal(0.4, 0.3);
-const files = d3.range(10).map((id) => {
+const files = d3.range(5).map((id) => {
   return {
     id,
     value: random(),
@@ -115,10 +115,19 @@ files.forEach((f) => {
 });
 const spaceBetweenCircles =
   (2 * Math.PI - d3.sum(files, (d) => d.arcAngle)) / files.length;
-files.reduce((acc, f) => {
-  const startPoint = acc + spaceBetweenCircles;
-  f.angle = startPoint + f.arcAngle / 2;
-  return startPoint + f.arcAngle;
+files.reduce((acc, f, i) => {
+  let startPoint = 0;
+  if (i === 0) {
+    startPoint = 0;
+    f.angle = 0;
+  } else {
+    startPoint = acc + spaceBetweenCircles;
+    f.angle = startPoint + f.arcAngle / 2;
+  }
+  const position = d3.pointRadial(f.angle, firstRingMid);
+  f.x = position[0];
+  f.y = position[1];
+  return f.angle + f.arcAngle / 2;
 }, 0);
 function getArcCircleAngle(mainRadius, innerCircleRadius) {
   let distanceToCutline = Math.pow(innerCircleRadius, 2) / (2 * mainRadius);
@@ -167,6 +176,11 @@ function radialAreaChart() {
   return svg;
 }
 function addCircles(svg) {
+  svg
+    .append('circle')
+    .attr('stroke', '2px')
+    .attr('fill', (d) => color(undefined))
+    .attr('r', 30);
   const leaf = svg
     .selectAll('g.sorted')
     .data(files)
@@ -185,32 +199,34 @@ function addCircles(svg) {
     .append('circle')
     .attr('stroke', '2px')
     .attr('fill', (d) => color(d))
-    .attr('cx', (d, i) => {
-      if (!d) {
-        debugger;
-      }
-      return d3.pointRadial(d.angle, firstRingMid)[0];
-    })
-    .attr('cy', (d, i) => d3.pointRadial(d.angle, firstRingMid)[1])
+    .attr('cx', (d, i) => d.x)
+    .attr('cy', (d, i) => d.y)
     .attr('r', (d) => circleRadiusScale(d.value));
   leaf
     .append('text')
     .selectAll('tspan')
-    .data((d) => {
-      return [d.value];
-    })
+    // .data((d) => {
+    //   return [d];
+    // })
     .join('tspan')
-    .attr('x', 0)
-    .attr('y', 0)
+    .attr('x', (d) => d.x)
+    .attr('y', (d) => d.y)
     .text((d) => {
       // console.log('d is ', Math.floor(d * 100));
-      return Math.floor(d * 100);
+      return Math.floor(d.value * 100);
     });
-  svg
+  leaf
     .append('path')
     .attr('stroke', '#000')
-    .attr('stroke-opacity', 0.2)
-    .attr('d', (d) => `M0,0 L${d3.pointRadial(d.angle, innerRadius)}`);
+    // .attr('stroke-opacity', 0.2)
+    .attr(
+      'd',
+      (d) =>
+        `M${d3.pointRadial(d.angle, 30)} L${d3.pointRadial(
+          d.angle,
+          firstRingMid - d.r
+        )}`
+    );
 }
 
 const svg = radialAreaChart();
