@@ -209,6 +209,7 @@ function addCircles(svg) {
     .selectAll('g.firstGroup')
     .data(firstGroup)
     .join('g')
+    .attr('transform', (d) => `translate(${d.x},${d.y})`)
 
     // .attr(
     //   'transform',
@@ -219,22 +220,30 @@ function addCircles(svg) {
     //   return `translate(${x}, ${y})`;
     // })
     .attr('class', 'firstGroup');
+
+  const uid = `O-${Math.random().toString(16).slice(2)}`;
+
+  leaf
+    .append('clipPath')
+    .attr('id', (d) => `${uid}-clip-${d.value}`)
+    .append('circle')
+    .attr('r', (d) => d.r);
   leaf
     .append('circle')
     .attr('stroke', '2px')
     .attr('fill', (d) => color(d))
-    .attr('cx', (d, i) => d.x)
-    .attr('cy', (d, i) => d.y)
     .attr('r', (d) => d.r);
   leaf
     .append('text')
+    .attr(
+      'clip-path',
+      (d) => `url(${new URL(`#${uid}-clip-${d.value}`, location)})`
+    )
     .selectAll('tspan')
-    // .data((d) => {
-    //   return [d];
-    // })
+    .data((d) => {
+      return [d];
+    })
     .join('tspan')
-    .attr('x', (d) => d.x)
-    .attr('y', (d) => d.y)
     .text((d) => {
       // console.log('d is ', Math.floor(d * 100));
       return Math.floor(d.value * 100);
