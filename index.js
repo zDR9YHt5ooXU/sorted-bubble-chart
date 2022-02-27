@@ -132,7 +132,7 @@ function splitGroup() {
 
 splitGroup();
 
-const firstRingCircle = { r: firstRingEnd };
+const firstRingCircle = { x: 0, y: 0, r: firstRingEnd };
 // d3.shuffle(restGroup);
 d3.packSiblings([firstRingCircle, ...restGroup]);
 d3.shuffle(firstGroup);
