@@ -99,6 +99,7 @@ const yTicks = y.ticks(2);
 const yTickValues = yTicks.map(y);
 const circleRadius = -(yTickValues[0] - yTickValues[1]) / 2;
 const firstRingMid = (yTickValues[0] + yTickValues[1]) / 2;
+const firstRingEnd = yTickValues[1];
 const minRadius = 10;
 const circleRadiusScale = d3
   .scaleLinear()
@@ -109,7 +110,6 @@ const color = d3.scaleOrdinal(d3.schemeTableau10);
 
 files.forEach((f) => {
   f.r = circleRadiusScale(f.value);
-
   // f.angle = 2 * Math.PI;
   f.arcAngle = getArcCircleAngle(firstRingMid, f.r);
 });
@@ -117,16 +117,25 @@ files.sort((a, b) => b.arcAngle - a.arcAngle);
 const firstGroup = [];
 const restGroup = [];
 const centerCircleRadius = 80;
-let firstGroupArc = 0;
-for (let file of files) {
-  if (firstGroupArc + file.arcAngle < 1.5 * Math.PI) {
-    firstGroup.push(file);
-    firstGroupArc += file.arcAngle;
-  } else {
-    restGroup.push(file);
+
+function splitGroup() {
+  let firstGroupArc = 0;
+  for (let file of files) {
+    if (firstGroupArc + file.arcAngle < 1.5 * Math.PI) {
+      firstGroup.push(file);
+      firstGroupArc += file.arcAngle;
+    } else {
+      restGroup.push(file);
+    }
   }
 }
 
+splitGroup();
+console.log(restGroup);
+const firstRingCircle = { r: firstRingEnd };
+d3.packSiblings([firstRingCircle, ...restGroup]);
+console.log(restGroup);
+console.log(firstRingCircle);
 d3.shuffle(firstGroup);
 const spaceBetweenCircles =
   (2 * Math.PI - d3.sum(firstGroup, (d) => d.arcAngle)) / firstGroup.length;
@@ -197,7 +206,7 @@ function addCircles(svg) {
     .attr('fill', (d) => color(undefined))
     .attr('r', centerCircleRadius);
   const leaf = svg
-    .selectAll('g.sorted')
+    .selectAll('g.firstGroup')
     .data(firstGroup)
     .join('g')
 
@@ -209,14 +218,14 @@ function addCircles(svg) {
     //   const [x, y] = d3.pointRadial(d.angle, firstRingMid);
     //   return `translate(${x}, ${y})`;
     // })
-    .attr('class', 'sorted');
+    .attr('class', 'firstGroup');
   leaf
     .append('circle')
     .attr('stroke', '2px')
     .attr('fill', (d) => color(d))
     .attr('cx', (d, i) => d.x)
     .attr('cy', (d, i) => d.y)
-    .attr('r', (d) => circleRadiusScale(d.value));
+    .attr('r', (d) => d.r);
   leaf
     .append('text')
     .selectAll('tspan')
@@ -247,6 +256,19 @@ function addCircles(svg) {
       //   )}`
       (d) => link(d)
     );
+
+  const restGroupLeaf = svg
+    .selectAll('g.restGroup')
+    .data(restGroup)
+    .join('g')
+    .attr('class', 'restGroup');
+  restGroupLeaf
+    .append('circle')
+    .attr('stroke', '2px')
+    .attr('fill', (d) => color(d))
+    .attr('cx', (d, i) => d.x - firstRingCircle.x)
+    .attr('cy', (d, i) => d.y - firstRingCircle.y)
+    .attr('r', (d) => d.r);
 }
 
 const svg = radialAreaChart();
