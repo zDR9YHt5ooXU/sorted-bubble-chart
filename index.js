@@ -131,11 +131,10 @@ function splitGroup() {
 }
 
 splitGroup();
-console.log(restGroup);
+
 const firstRingCircle = { r: firstRingEnd };
+// d3.shuffle(restGroup);
 d3.packSiblings([firstRingCircle, ...restGroup]);
-console.log(restGroup);
-console.log(firstRingCircle);
 d3.shuffle(firstGroup);
 const spaceBetweenCircles =
   (2 * Math.PI - d3.sum(firstGroup, (d) => d.arcAngle)) / firstGroup.length;
@@ -250,8 +249,14 @@ function addCircles(svg) {
     });
   const link = d3
     .link(d3.curveNatural)
-    .source((d) => d3.pointRadial(d.angle, centerCircleRadius))
-    .target((d) => d3.pointRadial(d.angle, firstRingMid - d.r));
+    .source((d) => {
+      const [x, y] = d3.pointRadial(d.angle, centerCircleRadius);
+      return [x - d.x, y - d.y];
+    })
+    .target((d) => {
+      const [x, y] = d3.pointRadial(d.angle, firstRingMid - d.r);
+      return [x - d.x, y - d.y];
+    });
   leaf
     .append('path')
     .attr('stroke', '#000')
