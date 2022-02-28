@@ -326,11 +326,14 @@ function addCircles(svg) {
     .attr('fill', (d) => color(d))
     .attr('cx', (d, i) => d.x - firstRingCircle.x)
     .attr('cy', (d, i) => d.y - firstRingCircle.y)
-    .attr('r', (d) => d.r);
+    .attr('r', (d) => d.r * 0.5);
 
   // set simulation's nodes to our newly created nodes array
   // simulation starts running automatically once nodes are set
-  simulation.nodes(restGroup).on('tick', ticked).restart();
+  simulation
+    .nodes([firstRingCircle, ...restGroup])
+    .on('end', ticked)
+    .restart();
 
   // callback function called after every tick of the force simulation
   // here we do the actual repositioning of the circles based on current x and y value of their bound node data
