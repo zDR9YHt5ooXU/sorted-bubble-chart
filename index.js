@@ -203,18 +203,12 @@ function radialAreaChart() {
   return svg;
 }
 function addCircles(svg) {
+  
   svg
-    .append('g')
-    .attr('class', 'coordinate')
-    .append('text')
-    .attr('x', 10)
-    .attr('y', 0)
-    .text(() => '0,0');
-  // svg
-  //   .append('circle')
-  //   .attr('stroke', '2px')
-  //   .attr('fill', (d) => color(undefined))
-  //   .attr('r', centerCircleRadius);
+    .append('circle')
+    .attr('stroke', '2px')
+    .attr('fill', (d) => color(undefined))
+    .attr('r', centerCircleRadius);
   const leaf = svg
     .selectAll('g.firstGroup')
     .data(firstGroup)
@@ -296,18 +290,18 @@ function addCircles(svg) {
       (d) => link(d)
     );
 
-  // const restGroupLeaf = svg
-  //   .selectAll('g.restGroup')
-  //   .data(restGroup)
-  //   .join('g')
-  //   .attr('class', 'restGroup');
-  // restGroupLeaf
-  //   .append('circle')
-  //   .attr('stroke', '2px')
-  //   .attr('fill', (d) => color(d))
-  //   .attr('cx', (d, i) => d.x - firstRingCircle.x)
-  //   .attr('cy', (d, i) => d.y - firstRingCircle.y)
-  //   .attr('r', (d) => d.r);
+  const restGroupLeaf = svg
+    .selectAll('g.restGroup')
+    .data(restGroup)
+    .join('g')
+    .attr('class', 'restGroup');
+  restGroupLeaf
+    .append('circle')
+    .attr('stroke', '2px')
+    .attr('fill', (d) => color(d))
+    .attr('cx', (d, i) => d.x - firstRingCircle.x)
+    .attr('cy', (d, i) => d.y - firstRingCircle.y)
+    .attr('r', (d) => d.r);
   return {
     leaf,
   };
