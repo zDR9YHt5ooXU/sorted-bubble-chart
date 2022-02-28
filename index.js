@@ -135,8 +135,34 @@ splitGroup();
 
 const firstRingCircle = { x: 0, y: 0, r: firstRingEnd };
 // d3.shuffle(restGroup);
-d3.packSiblings([firstRingCircle, ...restGroup]);
+// d3.packSiblings([firstRingCircle, ...restGroup]);
 d3.shuffle(firstGroup);
+
+// charge is dependent on size of the bubble, so bigger towards the middle
+function charge(d) {
+  return Math.pow(d.radius, 2.0) * 0.01;
+}
+
+// location to centre the bubbles
+const centre = firstRingCircle;
+
+// strength to apply to the position forces
+const forceStrength = 0.03;
+// create a force simulation and add forces to it
+const simulation = d3
+  .forceSimulation()
+  .force('charge', d3.forceManyBody().strength(charge))
+  // .force('center', d3.forceCenter(centre.x, centre.y))
+  .force('x', d3.forceX().strength(forceStrength).x(centre.x))
+  .force('y', d3.forceY().strength(forceStrength).y(centre.y))
+  .force(
+    'collision',
+    d3.forceCollide().radius((d) => d.r + 1)
+  );
+
+// force simulation starts up automatically, which we don't want as there aren't any nodes yet
+simulation.stop();
+
 const spaceBetweenCircles =
   (2 * Math.PI - d3.sum(firstGroup, (d) => d.arcAngle)) / firstGroup.length;
 firstGroup.reduce((acc, f, i) => {
@@ -203,7 +229,6 @@ function radialAreaChart() {
   return svg;
 }
 function addCircles(svg) {
-  
   svg
     .append('circle')
     .attr('stroke', '2px')
@@ -244,12 +269,12 @@ function addCircles(svg) {
     .on('mouseout', function () {
       d3.select(this).attr('stroke', null);
     })
-    .on(
-      'click',
-      (event, d) => (
-        d !== focus && zoom(event, d, leaf), event.stopPropagation()
-      )
-    );
+    .on('click', (event, d) => {
+      if (d !== focus) {
+        zoom(event, d, leaf);
+        event.stopPropagation();
+      }
+    });
 
   leaf
     .append('text')
@@ -302,6 +327,22 @@ function addCircles(svg) {
     .attr('cx', (d, i) => d.x - firstRingCircle.x)
     .attr('cy', (d, i) => d.y - firstRingCircle.y)
     .attr('r', (d) => d.r);
+
+  // set simulation's nodes to our newly created nodes array
+  // simulation starts running automatically once nodes are set
+  simulation.nodes(restGroup).on('tick', ticked).restart();
+
+  // callback function called after every tick of the force simulation
+  // here we do the actual repositioning of the circles based on current x and y value of their bound node data
+  // x and y values are modified by the force simulation
+  function ticked() {
+    restGroupLeaf
+      .select('circle')
+      .attr('cx', (d) => d.x)
+      .attr('cy', (d) => d.y);
+    // labels.attr('x', (d) => d.x).attr('y', (d) => d.y);
+  }
+
   return {
     leaf,
   };
