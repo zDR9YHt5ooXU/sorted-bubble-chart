@@ -134,13 +134,16 @@ function splitGroup() {
 splitGroup();
 
 const firstRingCircle = { x: 0, y: 0, r: firstRingEnd };
+restGroup.forEach((d) => {
+  d.r = d.r * 0.5;
+});
 // d3.shuffle(restGroup);
 // d3.packSiblings([firstRingCircle, ...restGroup]);
 d3.shuffle(firstGroup);
 
 // charge is dependent on size of the bubble, so bigger towards the middle
 function charge(d) {
-  return Math.pow(d.radius, 2.0) * 0.01;
+  return Math.pow(d.r, 2.0) * 0.01;
 }
 
 // location to centre the bubbles
@@ -326,15 +329,32 @@ function addCircles(svg) {
     .attr('fill', (d) => color(d))
     .attr('cx', (d, i) => d.x - firstRingCircle.x)
     .attr('cy', (d, i) => d.y - firstRingCircle.y)
-    .attr('r', (d) => d.r * 0.5);
+    .attr('r', (d) => d.r);
 
   // set simulation's nodes to our newly created nodes array
   // simulation starts running automatically once nodes are set
   simulation
     .nodes([firstRingCircle, ...restGroup])
-    .on('tick', ticked)
+    .on('start', start)
+    // .on('tick', ticked)
     .restart();
 
+  function start() {
+    var ticksPerRender = 3;
+    requestAnimationFrame(function render() {
+      for (var i = 0; i < ticksPerRender; i++) {
+        force.tick();
+      }
+      restGroupLeaf
+        .select('circle')
+        .attr('cx', (d) => d.x)
+        .attr('cy', (d) => d.y);
+
+      if (force.alpha() > 0) {
+        requestAnimationFrame(render);
+      }
+    });
+  }
   // callback function called after every tick of the force simulation
   // here we do the actual repositioning of the circles based on current x and y value of their bound node data
   // x and y values are modified by the force simulation
