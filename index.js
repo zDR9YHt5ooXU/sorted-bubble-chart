@@ -160,6 +160,8 @@ function getArcCircleAngle(mainRadius, innerCircleRadius) {
   return Math.acos(distanceToCutline / mainRadius) * 2;
 }
 
+const defaultFocus = { x: 0, y: 0, r: width / 2 };
+
 function radialAreaChart() {
   const svg = d3
     .create('svg')
@@ -168,7 +170,7 @@ function radialAreaChart() {
     .attr('stroke-linejoin', 'round')
     .attr('stroke-linecap', 'round')
     .style('cursor', 'pointer')
-    .on('click', (event) => zoom(event, defaultFocus));
+    .on('click', (event) => zoom(event, defaultFocus, leaf));
   // svg
   //   .append('path')
   //   .attr('fill', 'lightsteelblue')
@@ -247,7 +249,12 @@ function addCircles(svg) {
     .on('mouseout', function () {
       d3.select(this).attr('stroke', null);
     })
-    .on('click', (event, d) => (zoom(event, d, leaf), event.stopPropagation()));
+    .on(
+      'click',
+      (event, d) => (
+        d !== focus && zoom(event, d, leaf), event.stopPropagation()
+      )
+    );
 
   leaf
     .append('text')
@@ -306,7 +313,6 @@ function addCircles(svg) {
 }
 
 let view;
-const defaultFocus = { x: 0, y: 0, r: width / 2 };
 let focus = defaultFocus;
 function zoomTo(v, node) {
   const k = width / v[2];
@@ -321,11 +327,13 @@ function zoomTo(v, node) {
     'transform',
     // (d) => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`
     (d) => {
-      console.log(k);
       return `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`;
     }
   );
-  node.select('circle.circle').attr('r', (d) => d.r * k);
+  node.selectAll('circle.circle').attr('r', (d) => {
+    debugger;
+    return d.r * k;
+  });
 }
 
 function zoom(event, d, node) {
@@ -342,21 +350,27 @@ function zoom(event, d, node) {
     .duration(event.altKey ? 7500 : 750)
     .tween('zoom', (d) => {
       debugger;
-      const i = d3.interpolateZoom(view, [focus.x, focus.y, width]);
+      let focusWidth;
+      if (focus === defaultFocus) {
+        focusWidth = defaultFocus[2];
+      } else {
+        focusWidth = forcus.r * 2;
+      }
+      const i = d3.interpolateZoom(view, [focus.x, focus.y, focusWidth]);
       return (t) => zoomTo(i(t), node);
     });
 
-  node
-    // .filter(function (d) {
-    //   return d === focus || this.style.display === 'inline';
-    // })
-    .transition(transition)
-    .on('start', function (d) {
-      if (d === focus) this.style.display = 'inline';
-    })
-    .on('end', function (d) {
-      if (d !== focus) this.style.display = 'none';
-    });
+  // node;
+  // .filter(function (d) {
+  //   return d === focus || this.style.display === 'inline';
+  // })
+  // .transition(transition);
+  // .on('start', function (d) {
+  //   if (d === focus) this.style.display = 'inline';
+  // })
+  // .on('end', function (d) {
+  //   if (d !== focus) this.style.display = 'none';
+  // });
   // label
   //   .filter(function (d) {
   //     return d.parent === focus || this.style.display === 'inline';
