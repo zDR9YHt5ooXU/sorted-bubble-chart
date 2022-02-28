@@ -205,12 +205,12 @@ function addCircles(svg) {
     .append('text')
     .attr('x', 10)
     .attr('y', 0)
-    .text(() => 0, 0);
-  svg
-    .append('circle')
-    .attr('stroke', '2px')
-    .attr('fill', (d) => color(undefined))
-    .attr('r', centerCircleRadius);
+    .text(() => '0,0');
+  // svg
+  //   .append('circle')
+  //   .attr('stroke', '2px')
+  //   .attr('fill', (d) => color(undefined))
+  //   .attr('r', centerCircleRadius);
   const leaf = svg
     .selectAll('g.firstGroup')
     .data(firstGroup)
@@ -320,7 +320,11 @@ function zoomTo(v, node) {
   // );
   node.attr(
     'transform',
-    (d) => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`
+    // (d) => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`
+    (d) => {
+      console.log(k);
+      return `translate(${(d.x + v[0]) * k},${(d.y + v[1]) * k})`;
+    }
   );
   node.attr('r', (d) => d.r * k);
 }
@@ -340,9 +344,9 @@ function zoom(event, d, node) {
     });
 
   node
-    .filter(function (d) {
-      return d === focus || this.style.display === 'inline';
-    })
+    // .filter(function (d) {
+    //   return d === focus || this.style.display === 'inline';
+    // })
     .transition(transition)
     .on('start', function (d) {
       if (d === focus) this.style.display = 'inline';
