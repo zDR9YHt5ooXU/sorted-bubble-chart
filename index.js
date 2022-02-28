@@ -200,6 +200,13 @@ function radialAreaChart() {
 }
 function addCircles(svg) {
   svg
+    .append('g')
+    .attr('class', 'coordinate')
+    .append('text')
+    .attr('x', 10)
+    .attr('y', 0)
+    .text(() => 0, 0);
+  svg
     .append('circle')
     .attr('stroke', '2px')
     .attr('fill', (d) => color(undefined))
@@ -231,7 +238,19 @@ function addCircles(svg) {
     .append('circle')
     .attr('stroke', '2px')
     .attr('fill', (d) => color(d))
-    .attr('r', (d) => d.r);
+    .attr('r', (d) => d.r)
+    .on('mouseover', function () {
+      d3.select(this).attr('stroke', '#000');
+    })
+    .on('mouseout', function () {
+      d3.select(this).attr('stroke', null);
+    })
+    .on(
+      'click',
+      (event, d) =>
+        focus !== d && (zoom(event, d, leaf), event.stopPropagation())
+    );
+
   leaf
     .append('text')
     .attr(
@@ -283,10 +302,72 @@ function addCircles(svg) {
     .attr('cx', (d, i) => d.x - firstRingCircle.x)
     .attr('cy', (d, i) => d.y - firstRingCircle.y)
     .attr('r', (d) => d.r);
+  return {
+    leaf,
+  };
+}
+
+let view;
+let focus = { x: 0, y: 0, r: outerRadius };
+function zoomTo(v, node) {
+  const k = width / v[2];
+
+  view = v;
+
+  // label.attr(
+  //   'transform',
+  //   (d) => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`
+  // );
+  node.attr(
+    'transform',
+    (d) => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`
+  );
+  node.attr('r', (d) => d.r * k);
+}
+
+function zoom(event, d, node) {
+  const focus0 = focus;
+
+  focus = d;
+
+  const transition = svg
+    .transition()
+    .duration(event.altKey ? 7500 : 750)
+    .tween('zoom', (d) => {
+      debugger;
+      const i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2]);
+      return (t) => zoomTo(i(t), node);
+    });
+
+  node
+    .filter(function (d) {
+      return d === focus || this.style.display === 'inline';
+    })
+    .transition(transition)
+    .on('start', function (d) {
+      if (d === focus) this.style.display = 'inline';
+    })
+    .on('end', function (d) {
+      if (d !== focus) this.style.display = 'none';
+    });
+  // label
+  //   .filter(function (d) {
+  //     return d.parent === focus || this.style.display === 'inline';
+  //   })
+  //   .transition(transition)
+  //   .style('fill-opacity', (d) => (d.parent === focus ? 1 : 0))
+  //   .on('start', function (d) {
+  //     if (d.parent === focus) this.style.display = 'inline';
+  //   })
+  //   .on('end', function (d) {
+  //     if (d.parent !== focus) this.style.display = 'none';
+  //   });
 }
 
 const svg = radialAreaChart();
-addCircles(svg, files);
+const { leaf } = addCircles(svg, files);
 
 const element = document.querySelector('div#chart');
 element.appendChild(svg.node());
+
+zoomTo([0, 0, outerRadius], leaf);
