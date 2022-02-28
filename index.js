@@ -355,7 +355,7 @@ function zoom(event, d, node) {
       if (focus === defaultFocus) {
         focusWidth = defaultFocus.r * 2;
       } else {
-        focusWidth = forcus.r * 4;
+        focusWidth = focus.r * 4;
       }
       const i = d3.interpolateZoom(view, [focus.x, focus.y, focusWidth]);
       return (t) => zoomTo(i(t), node);
