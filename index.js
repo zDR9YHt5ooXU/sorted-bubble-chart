@@ -332,7 +332,7 @@ function addCircles(svg) {
   // simulation starts running automatically once nodes are set
   simulation
     .nodes([firstRingCircle, ...restGroup])
-    .on('end', ticked)
+    .on('tick', ticked)
     .restart();
 
   // callback function called after every tick of the force simulation
