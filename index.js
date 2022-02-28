@@ -89,6 +89,7 @@ const files = d3.range(100).map((id) => {
     value: random(),
   };
 });
+
 // const files = [
 //   { id: 'flare.analytics.graph.MaxFlowMinCut', value: 7840 },
 //   { id: 'flare.analytics.graph.ShortestPaths', value: 5914 },
@@ -352,9 +353,9 @@ function zoom(event, d, node) {
       debugger;
       let focusWidth;
       if (focus === defaultFocus) {
-        focusWidth = defaultFocus[2];
+        focusWidth = defaultFocus.r * 2;
       } else {
-        focusWidth = forcus.r * 2;
+        focusWidth = forcus.r * 4;
       }
       const i = d3.interpolateZoom(view, [focus.x, focus.y, focusWidth]);
       return (t) => zoomTo(i(t), node);
